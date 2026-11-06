@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}RackRun — Your Pool League, Organized{% endblock %}
+{% block content %}
+<section class="hero-grid">
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="eyebrow-dot"></span> THE LEAGUE, IN PLAY</div>
+    <h1>Every rack.<br><span>Every point.</span><br>All in one place.</h1>
+    <p class="hero-subtitle">A cleaner way to run league night. Players log scores in seconds, teams climb the leaderboard, and admins keep every result organized.</p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="{{ url_for('player_portal') }}">I'm a player <span>↗</span></a>
+      <a class="button button-secondary" href="{{ url_for('admin_portal') }}">Admin access <span>↗</span></a>
+    </div>
+    <div class="trust-line"><span class="avatar-stack"><i>8</i><i>9</i><i>10</i></span><span>Made for the people behind the cue</span></div>
+  </div>
+  <div class="hero-art" aria-label="Pool balls illustration">
+    <div class="art-topline"><span>LEAGUE NIGHT</span><span class="live-dot"></span><span>READY TO PLAY</span></div>
+    <div class="table-art">
+      <div class="table-pocket pocket-a"></div><div class="table-pocket pocket-b"></div><div class="table-pocket pocket-c"></div>
+      <div class="table-pocket pocket-d"></div><div class="table-pocket pocket-e"></div><div class="table-pocket pocket-f"></div>
+      <div class="table-line"></div>
+      <div class="pool-ball ball-eight"><span>8</span></div>
+      <div class="pool-ball ball-nine"><span>9</span></div>
+      <div class="pool-ball ball-three"><span>3</span></div>
+      <div class="pool-ball ball-two"><span>2</span></div>
+      <div class="cue-ball"></div>
+      <div class="cue-stick"></div>
+    </div>
+    <div class="art-bottomline"><span>01 / SCORE</span><span>02 / RANK</span><span>03 / REPEAT</span></div>
+    <div class="art-tag"><strong>10</strong><span>POINTS<br>PER GAME</span></div>
+  </div>
+</section>
+
+<section class="stats-strip" aria-label="League platform totals">
+  <div><strong>{{ stats.teams }}</strong><span>Teams registered</span></div>
+  <div><strong>{{ stats.players }}</strong><span>Players on the roster</span></div>
+  <div><strong>{{ stats.games }}</strong><span>Games recorded</span></div>
+  <div class="stats-note"><span class="status-pulse"></span> Your league, always up to date</div>
+</section>
+
+<section class="portal-section">
+  <div class="section-heading">
+    <div><div class="eyebrow">PICK YOUR SIDE</div><h2>Where are you headed?</h2></div>
+    <p>Two simple dashboards. Everything you need, nothing you don't.</p>
+  </div>
+  <div class="portal-cards">
+    <a class="portal-card player-card" href="{{ url_for('player_portal') }}">
+      <div class="portal-icon"><span class="person-icon">●</span></div>
+      <div class="portal-card-meta">PLAYER DASHBOARD <span>01</span></div>
+      <h3>Get in the game.</h3>
+      <p>Join your team, submit game scores, track your points, and see how your team is doing.</p>
+      <div class="portal-link">Open player portal <b>↗</b></div>
+      <div class="card-orbit"></div>
+    </a>
+    <a class="portal-card admin-card" href="{{ url_for('admin_portal') }}">
+      <div class="portal-icon admin-icon"><span>▤</span></div>
+      <div class="portal-card-meta">LEAGUE MANAGEMENT <span>02</span></div>
+      <h3>Run the table.</h3>
+      <p>Review submissions, monitor team and player rankings, and export the league records.</p>
+      <div class="portal-link">Open admin dashboard <b>↗</b></div>
+      <div class="card-orbit"></div>
+    </a>
+  </div>
+</section>
+
+{% if standings %}
+<section class="mini-standings">
+  <div class="section-heading"><div><div class="eyebrow">THE EARLY LEADERS</div><h2>Team standings</h2></div><span class="muted-label">ALL-TIME TOTALS</span></div>
+  <div class="standings-preview">
+    {% for team in standings %}
+    <div class="preview-row"><span class="rank-number">{{ '%02d'|format(loop.index) }}</span><strong>{{ team.name }}</strong><span>{{ team.games }} games</span><b>{{ team.points }} <small>pts</small></b></div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

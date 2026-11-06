@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Player Portal — RackRun{% endblock %}
+{% block content %}
+<section class="page-intro compact-intro">
+  <div><div class="eyebrow"><span class="eyebrow-dot"></span> PLAYER PORTAL</div><h1>Let's get you<br><span>on the roster.</span></h1><p>Enter your name and team to get started. Joining an existing team adds you to its roster; a new team name creates a team automatically.</p></div>
+  <div class="intro-stat"><strong>4</strong><span>ROSTER PLAYERS<br>PER TEAM</span></div>
+</section>
+<section class="join-layout">
+  <div class="panel join-panel">
+    <div class="panel-heading"><div><div class="eyebrow">PLAYER SETUP</div><h2>Join the league</h2></div><span class="step-chip">01 / 01</span></div>
+    <form method="post" action="{{ url_for('player_join') }}" class="form-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="player_name">Your player name</label>
+      <input id="player_name" name="player_name" type="text" maxlength="40" placeholder="e.g. Alex Johnson" autocomplete="name" required>
+      <div class="form-divider"><span>CHOOSE YOUR TEAM</span></div>
+      <label for="team_id">Join an existing team <span class="optional">OPTIONAL</span></label>
+      <select id="team_id" name="team_id">
+        <option value="">Select a team...</option>
+        {% for team in teams %}
+          <option value="{{ team.id }}" {% if team.player_count >= 4 %}disabled{% endif %}>{{ team.name }} · {{ team.player_count }}/4 players{% if team.player_count >= 4 %} · Full{% endif %}</option>
+        {% endfor %}
+      </select>
+      <div class="or-divider"><span>OR</span></div>
+      <label for="team_name">Create or find a team by name</label>
+      <input id="team_name" name="team_name" type="text" maxlength="40" placeholder="e.g. The Break Room">
+      <p class="field-hint">If the name already exists, you'll join that team. Otherwise, a new team will be created.</p>
+      <button class="button button-primary button-full" type="submit">Continue to player dashboard <span>↗</span></button>
+    </form>
+  </div>
+  <aside class="join-aside">
+    <div class="aside-number">01</div><h3>Pick your team.<br>Post your points.<br>Own the leaderboard.</h3>
+    <p>Each team can have up to four roster players. A substitute can be recorded on a game-by-game basis without taking a roster spot.</p>
+    <div class="rule-list"><div><span>01</span><b>Up to 4 games per player</b></div><div><span>02</span><b>16 games max per team, per night</b></div><div><span>03</span><b>10 points available per game</b></div></div>
+  </aside>
+</section>
+{% endblock %}

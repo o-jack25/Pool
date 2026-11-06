@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — RackRun{% endblock %}
+{% block content %}
+<section class="dashboard-header admin-dashboard-header">
+  <div><div class="eyebrow"><span class="eyebrow-dot"></span> LEAGUE CONTROL ROOM</div><h1>Keep the league<br><span>in motion.</span></h1><p class="subline">Scores, standings, and player performance in one place.</p></div>
+  <div class="admin-actions"><a class="button button-secondary" href="{{ url_for('export_scores') }}">Export CSV ↓</a><form method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-quiet" type="submit">Sign out ↗</button></form></div>
+</section>
+<section class="metric-grid admin-metrics">
+  <div class="metric-card metric-main"><span class="metric-label">GAMES IN VIEW</span><strong>{{ summary.games }}</strong><span class="metric-foot">{{ 'Selected league night' if selected_date else 'All recorded league nights' }}</span></div>
+  <div class="metric-card"><span class="metric-label">POINTS EARNED</span><strong>{{ summary.points }}</strong><span class="metric-foot">Across filtered games</span></div>
+  <div class="metric-card"><span class="metric-label">ACTIVE TEAMS</span><strong>{{ summary.active_teams }}</strong><span class="metric-foot">{{ total_teams }} teams registered</span></div>
+  <div class="metric-card"><span class="metric-label">PLAYERS</span><strong>{{ total_players }}</strong><span class="metric-foot">Across all team rosters</span></div>
+</section>
+
+<section class="panel filter-panel">
+  <form method="get" action="{{ url_for('admin_dashboard') }}" class="filter-form"><div><div class="eyebrow">FILTER RESULTS</div><h2>League-night view</h2></div><label for="admin-date">Date</label><input id="admin-date" type="date" name="date" value="{{ selected_date }}"><button class="button button-primary" type="submit">Apply filter</button>{% if selected_date %}<a class="text-link clear-filter" href="{{ url_for('admin_dashboard') }}">Clear</a>{% endif %}</form>
+</section>
+
+<section class="admin-grid">
+  <div class="panel data-panel admin-data-panel"><div class="panel-heading"><div><div class="eyebrow">TEAM LEADERBOARD</div><h2>Standings</h2></div><span class="muted-label">{{ 'SELECTED NIGHT' if selected_date else 'ALL-TIME' }}</span></div>
+  {% if standings %}<div class="table-wrap"><table><thead><tr><th>RANK</th><th>TEAM</th><th>GAMES</th><th class="align-right">POINTS</th></tr></thead><tbody>{% for team in standings %}<tr><td><span class="table-rank">{{ '%02d'|format(loop.index) }}</span></td><td><b>{{ team.name }}</b></td><td>{{ team.games }}</td><td class="align-right points-cell">{{ team.points }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">No teams have registered yet.</div>{% endif %}
+  </div>
+  <div class="panel data-panel admin-data-panel"><div class="panel-heading"><div><div class="eyebrow">INDIVIDUAL PERFORMANCE</div><h2>Player rankings</h2></div><span class="muted-label">{{ 'SELECTED NIGHT' if selected_date else 'ALL-TIME' }}</span></div>
+  {% if rankings %}<div class="table-wrap"><table><thead><tr><th>RANK</th><th>PLAYER / TEAM</th><th>GAMES</th><th class="align-right">POINTS</th></tr></thead><tbody>{% for item in rankings %}<tr><td><span class="table-rank">{{ '%02d'|format(loop.index) }}</span></td><td><b>{{ item.player_name }}</b><small class="table-subline">{{ item.team_name }}</small></td><td>{{ item.games }}</td><td class="align-right points-cell">{{ item.points }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">Player rankings appear after the first score is submitted.</div>{% endif %}
+  </div>
+</section>
+
+<section class="panel data-panel scores-review-panel"><div class="panel-heading"><div><div class="eyebrow">DATABASE REVIEW</div><h2>Submitted scores</h2></div><span class="muted-label">{{ recent_scores|length }} MOST RECENT ENTRIES</span></div>
+  {% if recent_scores %}<div class="table-wrap"><table><thead><tr><th>DATE</th><th>TEAM</th><th>PLAYER</th><th>GAME</th><th>RESULT</th><th>POINTS</th><th class="align-right">ACTION</th></tr></thead><tbody>{% for score in recent_scores %}<tr><td>{{ score.league_date }}</td><td><b>{{ score.team_name }}</b></td><td>{{ score.actual_player_name }}{% if score.is_substitution %}<span class="sub-tag">SUB</span>{% endif %}<small class="table-subline">Entered by {{ score.roster_name }}</small></td><td>#{{ score.game_number }}</td><td>{{ score.balls_pocketed }} balls{% if score.eight_ball %} + 8-ball{% endif %}</td><td class="points-cell">{{ score.points }}</td><td class="align-right"><form method="post" action="{{ url_for('delete_score', score_id=score.id) }}" onsubmit="return confirm('Delete this score entry?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="delete-button" type="submit" aria-label="Delete score">Delete</button></form></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">No score submissions yet. Once players enter scores, they will appear here.</div>{% endif %}
+  <div class="panel-footnote">Deleting a score recalculates the rankings automatically. CSV export includes all recorded entries.</div>
+</section>
+{% endblock %}

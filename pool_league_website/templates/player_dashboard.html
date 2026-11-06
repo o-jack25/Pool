@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}{{ player.name }}'s Dashboard — RackRun{% endblock %}
+{% block content %}
+<section class="dashboard-header">
+  <div><div class="eyebrow"><span class="eyebrow-dot"></span> PLAYER DASHBOARD</div><h1>What's the score,<br><span>{{ player.name }}?</span></h1><p class="subline">{{ player.team_name }} <span class="dot-separator">•</span> Your team workspace</p></div>
+  <form method="post" action="{{ url_for('player_logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-quiet" type="submit">Switch player ↗</button></form>
+</section>
+<section class="metric-grid player-metrics">
+  <div class="metric-card metric-main"><span class="metric-label">TEAM POINTS TONIGHT</span><strong>{{ team_points }}</strong><span class="metric-foot">{{ team_games }} of 16 games submitted</span><div class="metric-progress"><i style="width: {{ [team_games / 16 * 100, 100]|min }}%"></i></div></div>
+  <div class="metric-card"><span class="metric-label">YOUR GAMES TONIGHT</span><strong>{{ own_games }}<small> / 4</small></strong><span class="metric-foot">{{ 4 - own_games }} games remaining</span></div>
+  <div class="metric-card"><span class="metric-label">ROSTER</span><strong>{{ roster|length }}<small> / 4</small></strong><span class="metric-foot">Players on {{ player.team_name }}</span></div>
+</section>
+
+<section class="dashboard-grid">
+  <div class="panel score-panel">
+    <div class="panel-heading"><div><div class="eyebrow">QUICK SCORE ENTRY</div><h2>Log a game</h2></div><span class="live-pill"><i></i> LIVE ENTRY</span></div>
+    <form method="post" action="{{ url_for('submit_score') }}" class="form-stack score-form" data-score-form>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="league_date">League-night date</label>
+      <input id="league_date" type="date" name="league_date" value="{{ league_date }}" required>
+      <div class="sub-toggle-row">
+        <div><b>Substitution</b><span>Someone is playing in place of a roster player</span></div>
+        <label class="switch"><input type="checkbox" name="is_substitution" value="on" data-sub-toggle><span class="switch-track"></span></label>
+      </div>
+      <div class="sub-name-wrap" data-sub-name-wrap hidden>
+        <label for="substitute_name">Substitute's name</label>
+        <input id="substitute_name" name="substitute_name" type="text" maxlength="40" placeholder="Enter the substitute's name" data-sub-name>
+        <p class="field-hint">The game and points will be credited to the substitute.</p>
+      </div>
+      <div class="form-divider"><span>GAME RESULT</span></div>
+      <label for="balls_pocketed">Your object balls pocketed</label>
+      <select id="balls_pocketed" name="balls_pocketed" required data-balls>
+        {% for n in range(8) %}<option value="{{ n }}">{{ n }} {{ 'ball' if n == 1 else 'balls' }}</option>{% endfor %}
+      </select>
+      <label class="check-row" for="eight_ball"><input id="eight_ball" type="checkbox" name="eight_ball" data-eight disabled><span class="custom-check"></span><span><b>8-ball legally pocketed</b><small>Available after all 7 of your object balls are in.</small></span></label>
+      <div class="score-preview"><div><span class="metric-label">POINTS EARNED</span><strong data-points>0 <small>PTS</small></strong></div><div class="score-equation" data-equation>0 balls × 1 point</div></div>
+      <button class="button button-primary button-full" type="submit">Save game score <span>↗</span></button>
+    </form>
+  </div>
+
+  <div class="panel roster-panel">
+    <div class="panel-heading"><div><div class="eyebrow">YOUR LINEUP</div><h2>Team roster</h2></div><span class="count-badge">{{ roster|length }} / 4</span></div>
+    <div class="roster-list">
+      {% for member in roster %}
+      <div class="roster-item"><span class="roster-avatar">{{ member.name[:1]|upper }}</span><div class="roster-person"><b>{{ member.name }}{% if member.id == player.id %}<small>YOU</small>{% endif %}</b><span>{{ member.games }} games entered tonight</span></div><strong>{{ member.points }}<small> pts</small></strong></div>
+      {% endfor %}
+      {% for n in range(4 - roster|length) %}<div class="roster-item roster-empty"><span class="roster-avatar">+</span><div class="roster-person"><b>Open roster spot</b><span>Invite a teammate to join</span></div></div>{% endfor %}
+    </div>
+    <div class="panel-footnote">Team roster is limited to four players. Substitutes are entered with the score.</div>
+  </div>
+</section>
+
+<section class="panel data-panel">
+  <div class="panel-heading"><div><div class="eyebrow">TEAM PERFORMANCE</div><h2>Player rankings</h2></div><span class="muted-label">ALL-TIME · {{ player.team_name }}</span></div>
+  {% if rankings %}
+  <div class="table-wrap"><table><thead><tr><th>RANK</th><th>PLAYER</th><th>GAMES</th><th>AVG / GAME</th><th class="align-right">POINTS</th></tr></thead><tbody>
+  {% for rank in rankings %}<tr><td><span class="table-rank">{{ '%02d'|format(loop.index) }}</span></td><td><b>{{ rank.player_name }}</b></td><td>{{ rank.games }}</td><td>{{ rank.average }}</td><td class="align-right points-cell">{{ rank.points }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<div class="empty-state">No game scores yet. Log the first one to start the rankings.</div>{% endif %}
+</section>
+
+<section class="panel data-panel">
+  <div class="panel-heading"><div><div class="eyebrow">RECENT ACTIVITY</div><h2>Latest scores</h2></div><span class="muted-label">MOST RECENT FIRST</span></div>
+  {% if recent_scores %}<div class="table-wrap"><table><thead><tr><th>DATE</th><th>PLAYER</th><th>GAME</th><th>RESULT</th><th class="align-right">POINTS</th></tr></thead><tbody>
+  {% for score in recent_scores %}<tr><td>{{ score.league_date }}</td><td><b>{{ score.actual_player_name }}</b>{% if score.is_substitution %}<span class="sub-tag">SUB</span>{% endif %}</td><td>#{{ score.game_number }}</td><td>{{ score.balls_pocketed }} balls{% if score.eight_ball %} + 8-ball{% endif %}</td><td class="align-right points-cell">{{ score.points }}</td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<div class="empty-state">Your team's submitted games will appear here.</div>{% endif %}
+</section>
+{% endblock %}
